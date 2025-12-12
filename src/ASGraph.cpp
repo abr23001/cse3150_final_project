@@ -18,16 +18,18 @@ void ASGraph::addRelationship(int as1, int as2, int relationship) {
     ASNodePtr node1 = getOrCreateNode(as1);
     ASNodePtr node2 = getOrCreateNode(as2);
 
-    if (relationship == 0) {
+    if (relationship == -1) {
+        // CAIDA standard: Provider-to-Customer (AS1 → AS2)
         // as1 is provider of as2
         node1->customers.insert(as2);
         node2->providers.insert(as1);
-    } else if (relationship == -1) {
-        // as1 is customer of as2
-        node1->providers.insert(as2);
-        node2->customers.insert(as1);
+    } else if (relationship == 0) {
+        // CAIDA standard: Peer-to-Peer
+        node1->peers.insert(as2);
+        node2->peers.insert(as1);
     } else if (relationship == 1) {
-        // peer relationship
+        // CAIDA standard: Sibling (usually ignored)
+        // For now, treat as peer relationship
         node1->peers.insert(as2);
         node2->peers.insert(as1);
     }
@@ -269,15 +271,16 @@ void ASGraph::propagateUpward() {
                     // Don't send back to the AS we received it from
                     if (announcement.nextHopASN == provider) continue;
 
-                    announcement.nextHopASN = asn;
-                    announcement.receivedFrom = Relationship::CUSTOMER;
-                    receiverBGP->addToReceivedQueue(announcement.prefix, announcement);
+                    Announcement propagated = announcement.createPropagated(asn, Relationship::CUSTOMER);
+                    receiverBGP->addToReceivedQueue(propagated.prefix, propagated);
                 }
             }
         }
 
-        // Process received announcements
+        // Process received announcements for receivers (our working approach)
         for (int asn : propagationRanks[rank]) {
+            if (nodes.find(asn) == nodes.end()) continue;
+
             for (int provider : nodes[asn]->providers) {
                 if (nodes.find(provider) != nodes.end()) {
                     BGP* providerBGP = dynamic_cast<BGP*>(nodes[provider]->policy.get());
@@ -309,9 +312,8 @@ void ASGraph::propagateAcross() {
                 // Don't send back to the AS we received it from
                 if (announcement.nextHopASN == peer) continue;
 
-                announcement.nextHopASN = asn;
-                announcement.receivedFrom = Relationship::PEER;
-                receiverBGP->addToReceivedQueue(announcement.prefix, announcement);
+                Announcement propagated = announcement.createPropagated(asn, Relationship::PEER);
+                receiverBGP->addToReceivedQueue(propagated.prefix, propagated);
             }
         }
     }
@@ -347,15 +349,16 @@ void ASGraph::propagateDownward() {
                     // Don't send back to the AS we received it from
                     if (announcement.nextHopASN == customer) continue;
 
-                    announcement.nextHopASN = asn;
-                    announcement.receivedFrom = Relationship::PROVIDER;
-                    receiverBGP->addToReceivedQueue(announcement.prefix, announcement);
+                    Announcement propagated = announcement.createPropagated(asn, Relationship::PROVIDER);
+                    receiverBGP->addToReceivedQueue(propagated.prefix, propagated);
                 }
             }
         }
 
-        // Process received announcements
+        // Process received announcements for receivers (our working approach)  
         for (int asn : propagationRanks[rank]) {
+            if (nodes.find(asn) == nodes.end()) continue;
+
             for (int customer : nodes[asn]->customers) {
                 if (nodes.find(customer) != nodes.end()) {
                     BGP* customerBGP = dynamic_cast<BGP*>(nodes[customer]->policy.get());

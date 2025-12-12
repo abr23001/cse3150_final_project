@@ -3,10 +3,10 @@
 #include <vector>
 
 enum class Relationship {
-    CUSTOMER,
-    PEER,
-    PROVIDER,
-    ORIGIN
+    ORIGIN = 0,      // Best - our own announcement
+    CUSTOMER = 1,    // Good - makes money  
+    PEER = 2,        // Neutral
+    PROVIDER = 3     // Worst - costs money
 };
 
 class Announcement {
@@ -22,4 +22,8 @@ public:
         : prefix(prefix), asPath(asPath), nextHopASN(nextHopASN), receivedFrom(receivedFrom), rovInvalid(rovInvalid) {}
 
     Announcement() : nextHopASN(0), receivedFrom(Relationship::ORIGIN), rovInvalid(false) {}
+
+    // Ex2_-style propagation method
+    Announcement createPropagated(int senderASN, Relationship rel) const;
+    bool isBetterThan(const Announcement& other) const;
 };

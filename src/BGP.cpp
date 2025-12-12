@@ -65,32 +65,12 @@ Announcement BGP::selectBestAnnouncement(const std::vector<Announcement>& announ
         return announcements[0];
     }
 
-    // Sort by BGP decision process:
-    // 1. Best relationship (customer > peer > provider)
-    // 2. Shortest AS-Path
-    // 3. Lowest next hop ASN
-
+    // Use ex2_-style BGP decision process
     auto best = announcements[0];
 
     for (const auto& announcement : announcements) {
-        // Compare relationship preference
-        int bestRelPref = (best.receivedFrom == Relationship::CUSTOMER) ? 3 :
-                         (best.receivedFrom == Relationship::PEER) ? 2 : 1;
-        int currRelPref = (announcement.receivedFrom == Relationship::CUSTOMER) ? 3 :
-                         (announcement.receivedFrom == Relationship::PEER) ? 2 : 1;
-
-        if (currRelPref > bestRelPref) {
+        if (announcement.isBetterThan(best)) {
             best = announcement;
-        } else if (currRelPref == bestRelPref) {
-            // Compare AS-Path length
-            if (announcement.asPath.size() < best.asPath.size()) {
-                best = announcement;
-            } else if (announcement.asPath.size() == best.asPath.size()) {
-                // Compare next hop ASN
-                if (announcement.nextHopASN < best.nextHopASN) {
-                    best = announcement;
-                }
-            }
         }
     }
 
@@ -98,24 +78,8 @@ Announcement BGP::selectBestAnnouncement(const std::vector<Announcement>& announ
 }
 
 bool BGP::isBetterThan(const Announcement& candidate, const Announcement& existing) {
-    // Compare relationship preference
-    int candidateRelPref = (candidate.receivedFrom == Relationship::CUSTOMER) ? 3 :
-                          (candidate.receivedFrom == Relationship::PEER) ? 2 : 1;
-    int existingRelPref = (existing.receivedFrom == Relationship::CUSTOMER) ? 3 :
-                         (existing.receivedFrom == Relationship::PEER) ? 2 : 1;
-
-    if (candidateRelPref > existingRelPref) {
-        return true;
-    } else if (candidateRelPref == existingRelPref) {
-        // Compare AS-Path length
-        if (candidate.asPath.size() < existing.asPath.size()) {
-            return true;
-        } else if (candidate.asPath.size() == existing.asPath.size()) {
-            // Compare next hop ASN
-            return candidate.nextHopASN < existing.nextHopASN;
-        }
-    }
-    return false;
+    // Use announcement's own comparison method
+    return candidate.isBetterThan(existing);
 }
 
 // ROV Implementation
