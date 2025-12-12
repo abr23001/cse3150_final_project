@@ -8,7 +8,7 @@ Announcement Announcement::createPropagated(int senderASN, Relationship rel) con
 }
 
 bool Announcement::isBetterThan(const Announcement& other) const {
-    // Ex2_-style BGP decision process: lower relationship values are better
+    //  BGP decision process: lower relationship values are better
     if (receivedFrom != other.receivedFrom) {
         return receivedFrom < other.receivedFrom;
     }
