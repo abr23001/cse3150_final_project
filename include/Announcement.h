@@ -23,7 +23,6 @@ public:
 
     Announcement() : nextHopASN(0), receivedFrom(Relationship::ORIGIN), rovInvalid(false) {}
 
-    // Ex2_-style propagation method
     Announcement createPropagated(int senderASN, Relationship rel) const;
     bool isBetterThan(const Announcement& other) const;
 };
