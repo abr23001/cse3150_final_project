@@ -9,11 +9,11 @@ A BGP (Border Gateway Protocol) routing simulator that models Internet AS (Auton
 # Step 1: Compile src file to .0 files
 ```bash
   g++ -std=c++17 -Wall -Wextra -O0 -g -Iinclude -c src/ASGraph.cpp -o src/ASGraph.o
-  
+
   g++ -std=c++17 -Wall -Wextra -O0 -g -Iinclude -c src/BGP.cpp -o src/BGP.o
-  
+
   g++ -std=c++17 -Wall -Wextra -O0 -g -Iinclude -c src/Announcement.cpp -o src/Announcement.o
-  
+
   g++ -std=c++17 -Wall -Wextra -O0 -g -Iinclude -c src/bgp_simulator.cpp -o src/bgp_simulator.o
 ```
 # Step 2: Link all o. files into  ./bgp_simulator
@@ -88,23 +88,23 @@ Comparing files (sorted, ignoring whitespace):
 - **Efficient Data Structures**: Hash maps and sets allow O(1) operations across large-scale networks.
 
 ### BGP Implementation
-- **Correct CAIDA Parsing**  
+- **Correct CAIDA Parsing**
   Relationship codes:
-  - `-1`: Provider-to-Customer (AS1 → AS2)  
-  - `0`: Peer-to-Peer  
+  - `-1`: Provider-to-Customer (AS1 → AS2)
+  - `0`: Peer-to-Peer
   - `1`: Sibling (treated the same as peer)
 
-- **Realistic BGP Decision Process**  
+- **Realistic BGP Decision Process**
   Routes are selected based on:
-  1. **Relationship priority**  
-     ORIGIN > CUSTOMER > PEER > PROVIDER  
-  2. **AS-path length** (shorter is preferred)  
+  1. **Relationship priority**
+     ORIGIN > CUSTOMER > PEER > PROVIDER
+  2. **AS-path length** (shorter is preferred)
   3. **Next-hop ASN** (lower ASN wins ties)
 
 - **Three-Phase Propagation**
-  - **UP**: Customer → Provider  
-  - **ACROSS**: Peer ↔ Peer (synchronous)  
-  - **DOWN**: Provider → Customer  
+  - **UP**: Customer → Provider
+  - **ACROSS**: Peer ↔ Peer (synchronous)
+  - **DOWN**: Provider → Customer
 
 ### Network Topology
 - **Cycle Detection**: Detects and aborts on invalid provider–customer loops.

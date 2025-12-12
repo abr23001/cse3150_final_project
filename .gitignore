@@ -1,40 +1,12 @@
-# Ignore everything by default
-*
-
-# Allow directories (so Git can descend into src/ and include/)
-!*/
-
-# Allow source code in src/ and include/
-!src/**/*.cpp
-!src/**/*.h
-!include/**/*.cpp
-!include/**/*.h
-
-# Allow markdown files
-!*.md
-
-# Ignore build outputs
+# build artifacts
 *.o
-*.out
-*.exe
-*.a
-*.so
-*.dll
-
-# Ignore binaries in root
-bgp_simulator
-bgp_main
 asgraph
-simple_bgp_test
-bgp_test
+bgp_simulator
 
-# Ignore large datasets / test data
-*.csv
+# local data / benchmarks (not tracked)
 bench/
-prefix/
-many/
-subprefix/
-example/
-test/
-working_ribs.csv
+ribs.csv
+
+# local makefile (if not submitting it)
+Makefile
 
