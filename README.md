@@ -1,242 +1,137 @@
-# BGP Simulator with ROV (Route Origin Validation)
+# BGP Simulator
 
-A comprehensive BGP routing simulator that models Internet AS (Autonomous System) relationships and implements Route Origin Validation (ROV) security features.
+A BGP (Border Gateway Protocol) routing simulator that models Internet AS (Autonomous System) relationships and implements Route Origin Validation (ROV) security features.
 
-## Technologies Used
+---
 
-### Core Technologies
-- **C++17**: Modern C++ with smart pointers and STL containers
-- **Object-Oriented Design**: Policy pattern for BGP implementations (BGP, ROV)
-- **Graph Theory**: AS topology flattening and cycle detection algorithms
-- **Network Protocols**: BGP (Border Gateway Protocol) decision process simulation
+## Design Choices
 
-### Key Components
-- **Smart Pointers**: `std::shared_ptr` and `std::unique_ptr` for memory management
-- **STL Containers**: `std::unordered_map`, `std::set`, `std::vector` for efficient data structures
-- **Inheritance**: Abstract Policy class with BGP and ROV implementations
-- **CSV/TSV Parsing**: Custom parsers handling various file formats and line endings
+### Core Architecture
+- **Policy-Based Design**: Each AS uses either a BGP or ROV policy for processing routes.
+- **Modern C++17**: Utilizes smart pointers (`std::unique_ptr`, `std::shared_ptr`) for automatic memory management.
+- **Efficient Data Structures**: Hash maps and sets allow O(1) operations across large-scale networks.
 
-### Algorithms
-- **Topological Sort**: Graph flattening for BGP propagation ranks
-- **Cycle Detection**: DFS-based detection of provider/customer cycles
-- **BGP Decision Process**: Multi-criteria route selection (relationship > path length > ASN)
-- **Three-Phase Propagation**: Up→Across→Down announcement propagation model
+### BGP Implementation
+- **Correct CAIDA Parsing**  
+  Relationship codes:
+  - `-1`: Provider-to-Customer (AS1 → AS2)  
+  - `0`: Peer-to-Peer  
+  - `1`: Sibling (treated the same as peer)
 
-## Build and Usage
+- **Realistic BGP Decision Process**  
+  Routes are selected based on:
+  1. **Relationship priority**  
+     ORIGIN > CUSTOMER > PEER > PROVIDER  
+  2. **AS-path length** (shorter is preferred)  
+  3. **Next-hop ASN** (lower ASN wins ties)
 
-### Building
+- **Three-Phase Propagation**
+  - **UP**: Customer → Provider  
+  - **ACROSS**: Peer ↔ Peer (synchronous)  
+  - **DOWN**: Provider → Customer  
+
+### Network Topology
+- **Cycle Detection**: Detects and aborts on invalid provider–customer loops.
+- **Propagation Ranks**: Automatically builds a hierarchy from leaf ASes upward.
+- **Loop Prevention**: Ensures announcements are not sent back toward their source.
+
+### ROV (Route Origin Validation)
+- **Selective Filtering**: ROV-enabled ASes drop announcements marked `rov_invalid = True`.
+- **Security Enhancement**: Simulates hijack mitigation.
+- **Backward Compatibility**: Non-ROV ASes accept all routes.
+
+---
+
+## How to Build and Run
+
+### Build
 ```bash
 make clean && make
 ```
-This creates two executables:
-- `asgraph` - Basic AS graph analysis
-- `bgp_simulator` - Full BGP simulation with ROV
 
-### Running the BGP Simulator
 
-**From project root directory (recommended):**
+### Run
 ```bash
-# Large dataset (many ASes)
-./bgp_simulator --relationships bench/many/CAIDAASGraphCollector_2025.10.16.txt --announcements bench/many/anns.csv --rov-asns bench/many/rov_asns.csv
-
-# Prefix-focused dataset  
-./bgp_simulator --relationships bench/prefix/CAIDAASGraphCollector_2025.10.15.txt --announcements bench/prefix/anns.csv --rov-asns bench/prefix/rov_asns.csv
-
-# Subprefix dataset
-./bgp_simulator --relationships bench/subprefix/CAIDAASGraphCollector_2025.10.15.txt --announcements bench/subprefix/anns.csv --rov-asns bench/subprefix/rov_asns.csv
+./bgp_simulator --relationships <relationships_file> \
+                --announcements <announcements_file> \
+                --rov-asns <rov_asns_file>
 ```
 
-**From a subdirectory:**
+
+### Test Datasets
 ```bash
-# If you want to run from a subdirectory, use ../bench/ paths:
-mkdir results && cd results
-../bgp_simulator --relationships ../bench/many/CAIDAASGraphCollector_2025.10.16.txt --announcements ../bench/many/anns.csv --rov-asns ../bench/many/rov_asns.csv
+./bgp_simulator --relationships bench/subprefix/CAIDAASGraphCollector_2025.10.16.txt \
+                --announcements bench/subprefix/anns.csv \
+                --rov-asns bench/subprefix/rov_asns.csv
+
+./bgp_simulator --relationships bench/prefix/CAIDAASGraphCollector_2025.10.16.txt \
+                --announcements bench/prefix/anns.csv \
+                --rov-asns bench/prefix/rov_asns.csv
+
+./bgp_simulator --relationships bench/many/CAIDAASGraphCollector_2025.10.16.txt \
+                --announcements bench/many/anns.csv \
+                --rov-asns bench/many/rov_asns.csv
 ```
 
-## Input File Formats
 
-### AS Relationships File
-**Format**: `AS1|AS2|relationship|source`
-- `relationship = 0`: AS1 provides to AS2 (provider-to-customer)
-- `relationship = -1`: AS1 is customer of AS2 (customer-to-provider)  
-- `relationship = 1`: AS1 peers with AS2 (peer-to-peer)
-
-**Example**:
+### Example Output for many:
+```bash
+abdullah@Acer-Predator:~/cse_3150/project3$ ./bgp_simulator --relationships ../bench/many/CAIDAASGraphCollector_2025.10.16.txt --announcements ../bench/many/anns.csv --rov-asns ../bench/many/rov_asns.csv
+Loading AS relationships from: ../bench/many/CAIDAASGraphCollector_2025.10.16.txt
+Loaded 78370 nodes in 507ms
+Checking for cycles in AS relationships...
+No cycles detected. Topology is valid.
+Flattening graph for BGP propagation...
+Graph flattened into 76 ranks in 135ms
+Loading ROV-enabled ASNs from: ../bench/many/rov_asns.csv
+Loaded 19 ROV-enabled ASNs
+Initializing BGP policies...
+Loading announcements from: ../bench/many/anns.csv
+Seeded 40 announcements
+Propagating BGP announcements...
+BGP propagation completed in 17160ms
+Writing results to: ribs.csv
+Simulation complete!
+Total routes in all RIBs: 2963832
 ```
-1|11537|0|bgp
-1|52640|-1|bgp
-2|137661|1|bgp
-```
 
-### Announcements File
-**Format**: `seed_asn,prefix,rov_invalid`
-- `seed_asn`: ASN that originates the announcement
-- `prefix`: IP prefix being announced (e.g., 10.0.0.0/24)
-- `rov_invalid`: Boolean (True/False) indicating if announcement is ROV-invalid
 
-**Example**:
+### Output Format
+The simulator generates a ribs.csv file containing the final routing tables:
 ```csv
-seed_asn,prefix,rov_invalid
-1,10.0.0.0/24,False
-2,10.1.0.0/24,True
-3,192.168.1.0/24,False
+asn,prefix,as_path
+27,1.2.0.0/16,"(27,)"
+25,1.2.3.0/24,"(25,)"
+2152,1.2.3.0/24,"(2152, 25)"
+10886,1.2.0.0/16,"(10886, 27)"
 ```
 
-### ROV ASNs File
-**Format**: Simple list of ASN numbers (one per line, no header)
 
-**Example**:
-```
-174
-1
-2
-3
-```
-
-## Output Files
-
-### ribs.csv
-**Format**: Tab-separated values with Python tuple-style AS-paths
-```
-asn	prefix	as_path
-1	10.0.0.0/24	(1,)
-2	10.0.0.0/24	(2, 52640, 1)
-174	192.168.1.0/24	(174, 6939, 3)
-```
-
-**Columns**:
-- `asn`: The AS storing this route in its RIB (Routing Information Base)
-- `prefix`: The IP prefix/network being routed
-- `as_path`: The AS-Path as a Python tuple showing the route through the Internet
-
-## Comparing Results
-
-### Using compare_output.sh
-The comparison script compares your simulator output with expected results:
-
+### Comparing Results
 ```bash
-# Make script executable (first time only)
-chmod +x compare_output.sh
-
-# Compare with expected output
-./compare_output.sh bench/many/ribs.csv ribs.csv
-./compare_output.sh bench/prefix/ribs.csv ribs.csv
+# Compare your output with expected results
 ./compare_output.sh bench/subprefix/ribs.csv ribs.csv
-```
-
-**Script Features**:
-- Sorts both files before comparison (handles different output orders)
-- Ignores whitespace differences
-- Provides clear success/failure messages
-- Shows detailed diff output for debugging
-
-**Example Usage**:
-```bash
-# Run simulation and compare
-./bgp_simulator --relationships ../bench/many/CAIDAASGraphCollector_2025.10.15.txt --announcements ../bench/many/anns.csv --rov-asns ../bench/many/rov_asns.csv
+./compare_output.sh bench/prefix/ribs.csv ribs.csv
 ./compare_output.sh bench/many/ribs.csv ribs.csv
 ```
 
-## Key Features
-
-### BGP Simulation
-- **Realistic BGP Decision Process**: Implements standard BGP route selection criteria
-- **Three-Phase Propagation**: Models real Internet routing behavior
-- **AS-Path Construction**: Proper AS-path prepending during route propagation
-- **Loop Prevention**: Avoids sending announcements back to their source
-
-### ROV (Route Origin Validation)
-- **Security Enhancement**: ROV-enabled ASes drop announcements marked as invalid
-- **Selective Deployment**: Only configured ASes implement ROV filtering
-- **Attack Mitigation**: Demonstrates how ROV prevents prefix hijacking attacks
-
-### Topology Validation
-- **Cycle Detection**: Identifies invalid provider/customer cycles
-- **Hierarchy Enforcement**: Ensures Internet's hierarchical structure
-- **Error Reporting**: Clear messages explaining topology violations
-
-### Performance
-- **Smart Pointers**: Efficient memory management without manual allocation
-- **Optimized Data Structures**: Hash maps and sets for fast lookups
-- **Scalable Design**: Handles networks with 100K+ nodes and 500K+ relationships
-
-## Error Handling
-
-### Common Error Messages
+### Output from Compare on many
 ```bash
-# Cycle Detection
-"ERROR: Provider cycle detected in AS relationships!"
-"ERROR: Customer cycle detected in AS relationships!"
+abdullah@Acer-Predator:~/cse_3150/project3$ ./compare_output.sh bench/many/ribs.csv ribs.csv
+Comparing files (sorted, ignoring whitespace):
+  Expected: bench/many/ribs.csv
+  Actual:   ribs.csv
 
-# File Errors  
-"Error opening file: filename.txt"
-"Failed to load dataset"
-
-# Usage Errors
-"Usage: ./bgp_simulator --relationships <file> --announcements <file> --rov-asns <file>"
+✓ Files match perfectly!
 ```
 
-### Troubleshooting
-1. **Cycle Errors**: The CAIDA datasets contain cycles, which is normal for real Internet data
-2. **File Not Found**: Ensure file paths are correct and files exist
-3. **Format Errors**: Check that input files match expected formats
-4. **Memory Issues**: For very large datasets, monitor system memory usage
+### Performance:
+- Handles **78,370 ASNs** with **76 propagation ranks**
+- Processes up to **2.96 million routes** (many dataset)
+- BGP Simulator in many dataset runs in ~16 seconds
 
-## Dataset Information
-
-### Bench Directory Structure
-```
-bench/
-├── many/                    # Large dataset
-│   ├── CAIDAASGraphCollector_2025.10.15.txt
-│   ├── CAIDAASGraphCollector_2025.10.16.txt  
-│   ├── anns.csv
-│   ├── rov_asns.csv
-│   └── ribs.csv             # Expected output
-├── prefix/                  # Prefix-focused dataset
-│   ├── CAIDAASGraphCollector_2025.10.15.txt
-│   ├── anns.csv
-│   ├── rov_asns.csv
-│   └── ribs.csv
-└── subprefix/              # Subprefix dataset
-    ├── CAIDAASGraphCollector_2025.10.15.txt
-    ├── anns.csv
-    ├── rov_asns.csv
-    └── ribs.csv
-```
-
-### Statistics
-- **Nodes**: ~78,000 ASes
-- **Relationships**: ~489,000 provider/customer links
-- **Announcements**: Variable per dataset
-- **ROV ASNs**: 19 ROV-enabled ASes across datasets
-
-## Development
-
-### Code Structure
-```
-include/
-├── ASNode.h          # AS node with relationships and policy
-├── ASGraph.h         # Main graph class with BGP functionality
-├── Announcement.h    # BGP announcement structure
-└── Policy.h          # Abstract policy with BGP/ROV implementations
-
-src/
-├── ASGraph.cpp       # Graph operations and BGP propagation
-├── BGP.cpp          # BGP and ROV policy implementations
-├── bgp_simulator.cpp # Main simulator executable
-└── main.cpp         # Basic graph analysis tool
-```
-
-### Extending the Simulator
-- Add new routing policies by inheriting from the Policy class
-- Implement additional BGP features in the BGP class
-- Extend announcement attributes in the Announcement class
-- Add new output formats in the outputToCSV method
-
-## References
-
-- CAIDA AS Relationships Dataset
-- RFC 4271: Border Gateway Protocol 4 (BGP-4)
-- RFC 6811: BGP Prefix Origin Validation
-- Internet Routing Architecture and Security Research
+### Error Handling
+The simulator exits with error code 1 and displays a message if:
+- Provider-customer cycles are detected in the AS relationships
+- Required input files cannot be opened
+- Command-line arguments are missing
