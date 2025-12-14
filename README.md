@@ -5,7 +5,9 @@ A BGP (Border Gateway Protocol) routing simulator that models Internet AS (Auton
 ---
 
 ### Build Command:
+
 # Step 1: Compile src file to .0 files
+```bash
   g++ -std=c++17 -Wall -Wextra -O0 -g -Iinclude -c src/ASGraph.cpp -o src/ASGraph.o
   
   g++ -std=c++17 -Wall -Wextra -O0 -g -Iinclude -c src/BGP.cpp -o src/BGP.o
@@ -13,13 +15,16 @@ A BGP (Border Gateway Protocol) routing simulator that models Internet AS (Auton
   g++ -std=c++17 -Wall -Wextra -O0 -g -Iinclude -c src/Announcement.cpp -o src/Announcement.o
   
   g++ -std=c++17 -Wall -Wextra -O0 -g -Iinclude -c src/bgp_simulator.cpp -o src/bgp_simulator.o
-
+```
 # Step 2: Link all o. files into  ./bgp_simulator
+```bash
   g++ -std=c++17 -Wall -Wextra -O0 -g -Iinclude src/ASGraph.cpp src/BGP.cpp src/Announcement.cpp src/bgp_simulator.cpp -o bgp_simulator
-
+```
 #Step 3: to run:
+```bash
   ./bgp_simulator --relationships bench/subprefix/CAIDAASGraphCollector_2025.10.16.txt --announcements bench/subprefix/anns.csv --rov-asns bench/subprefix/rov_asns.csv
-  
+ ```
+ 
 ## Design Choices
 
 ### Core Architecture
