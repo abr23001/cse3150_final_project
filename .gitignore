@@ -1,12 +1,10 @@
-# build artifacts
+# Ignore build artifacts
 *.o
 asgraph
 bgp_simulator
 
-# local data / benchmarks (not tracked)
-bench/
-ribs.csv
-
-# local makefile (if not submitting it)
+# Ignore local files
 Makefile
+ribs.csv
+bench/
 
