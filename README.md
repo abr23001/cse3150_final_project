@@ -28,9 +28,9 @@ A BGP (Border Gateway Protocol) routing simulator that models Internet AS (Auton
  ### Test Datasets
 ```bash
 ./bgp_simulator --relationships ../bench/many/CAIDAASGraphCollector_2025.10.16.txt --announcements ../bench/many/anns.csv --rov-asns ../bench/many/rov_asns.csv
-
+# OR
 ./bgp_simulator --relationships ../bench/prefix/CAIDAASGraphCollector_2025.10.16.txt --announcements ../bench/prefix/anns.csv --rov-asns ../bench/prefix/rov_asns.csv
-
+# OR
 ./bgp_simulator --relationships ../bench/subprefix/CAIDAASGraphCollector_2025.10.16.txt --announcements ../bench/subprefix/anns.csv --rov-asns ../bench/subprefix/rov_asns.csv
 ```
 
@@ -59,7 +59,9 @@ Total routes in all RIBs: 2963832
 ```bash
 # Compare your output with expected results
 ./compare_output.sh ../bench/many/ribs.csv ribs.csv
+# OR
 ./compare_output.sh ../bench/prefix/ribs.csv ribs.csv
+# OR
 ./compare_output.sh ../bench/subprefix/ribs.csv ribs.csv
 ```
 
