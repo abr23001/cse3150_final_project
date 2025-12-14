@@ -24,7 +24,62 @@ A BGP (Border Gateway Protocol) routing simulator that models Internet AS (Auton
 ```bash
   ./bgp_simulator --relationships bench/subprefix/CAIDAASGraphCollector_2025.10.16.txt --announcements bench/subprefix/anns.csv --rov-asns bench/subprefix/rov_asns.csv
  ```
- 
+
+ ### Test Datasets
+```bash
+./bgp_simulator --relationships bench/subprefix/CAIDAASGraphCollector_2025.10.16.txt \
+                --announcements bench/subprefix/anns.csv \
+                --rov-asns bench/subprefix/rov_asns.csv
+
+./bgp_simulator --relationships bench/prefix/CAIDAASGraphCollector_2025.10.16.txt \
+                --announcements bench/prefix/anns.csv \
+                --rov-asns bench/prefix/rov_asns.csv
+
+./bgp_simulator --relationships bench/many/CAIDAASGraphCollector_2025.10.16.txt \
+                --announcements bench/many/anns.csv \
+                --rov-asns bench/many/rov_asns.csv
+```
+
+### Example Output for many:
+```bash
+abdullah@Acer-Predator:~/cse_3150/project3$ ./bgp_simulator --relationships ../bench/many/CAIDAASGraphCollector_2025.10.16.txt --announcements ../bench/many/anns.csv --rov-asns ../bench/many/rov_asns.csv
+Loading AS relationships from: ../bench/many/CAIDAASGraphCollector_2025.10.16.txt
+Loaded 78370 nodes in 507ms
+Checking for cycles in AS relationships...
+No cycles detected. Topology is valid.
+Flattening graph for BGP propagation...
+Graph flattened into 76 ranks in 135ms
+Loading ROV-enabled ASNs from: ../bench/many/rov_asns.csv
+Loaded 19 ROV-enabled ASNs
+Initializing BGP policies...
+Loading announcements from: ../bench/many/anns.csv
+Seeded 40 announcements
+Propagating BGP announcements...
+BGP propagation completed in 17160ms
+Writing results to: ribs.csv
+Simulation complete!
+Total routes in all RIBs: 2963832
+```
+
+### Comparing Results
+```bash
+# Compare your output with expected results
+./compare_output.sh bench/subprefix/ribs.csv ribs.csv
+./compare_output.sh bench/prefix/ribs.csv ribs.csv
+./compare_output.sh bench/many/ribs.csv ribs.csv
+```
+
+### Output from Compare on many
+```bash
+abdullah@Acer-Predator:~/cse_3150/project3$ ./compare_output.sh bench/many/ribs.csv ribs.csv
+Comparing files (sorted, ignoring whitespace):
+  Expected: bench/many/ribs.csv
+  Actual:   ribs.csv
+
+✓ Files match perfectly!
+```
+---
+
 ## Design Choices
 
 ### Core Architecture
@@ -62,89 +117,6 @@ A BGP (Border Gateway Protocol) routing simulator that models Internet AS (Auton
 - **Backward Compatibility**: Non-ROV ASes accept all routes.
 
 ---
-
-## How to Build and Run
-
-### Build
-```bash
-make clean && make
-```
-
-
-### Run
-```bash
-./bgp_simulator --relationships <relationships_file> \
-                --announcements <announcements_file> \
-                --rov-asns <rov_asns_file>
-```
-
-
-### Test Datasets
-```bash
-./bgp_simulator --relationships bench/subprefix/CAIDAASGraphCollector_2025.10.16.txt \
-                --announcements bench/subprefix/anns.csv \
-                --rov-asns bench/subprefix/rov_asns.csv
-
-./bgp_simulator --relationships bench/prefix/CAIDAASGraphCollector_2025.10.16.txt \
-                --announcements bench/prefix/anns.csv \
-                --rov-asns bench/prefix/rov_asns.csv
-
-./bgp_simulator --relationships bench/many/CAIDAASGraphCollector_2025.10.16.txt \
-                --announcements bench/many/anns.csv \
-                --rov-asns bench/many/rov_asns.csv
-```
-
-
-### Example Output for many:
-```bash
-abdullah@Acer-Predator:~/cse_3150/project3$ ./bgp_simulator --relationships ../bench/many/CAIDAASGraphCollector_2025.10.16.txt --announcements ../bench/many/anns.csv --rov-asns ../bench/many/rov_asns.csv
-Loading AS relationships from: ../bench/many/CAIDAASGraphCollector_2025.10.16.txt
-Loaded 78370 nodes in 507ms
-Checking for cycles in AS relationships...
-No cycles detected. Topology is valid.
-Flattening graph for BGP propagation...
-Graph flattened into 76 ranks in 135ms
-Loading ROV-enabled ASNs from: ../bench/many/rov_asns.csv
-Loaded 19 ROV-enabled ASNs
-Initializing BGP policies...
-Loading announcements from: ../bench/many/anns.csv
-Seeded 40 announcements
-Propagating BGP announcements...
-BGP propagation completed in 17160ms
-Writing results to: ribs.csv
-Simulation complete!
-Total routes in all RIBs: 2963832
-```
-
-
-### Output Format
-The simulator generates a ribs.csv file containing the final routing tables:
-```csv
-asn,prefix,as_path
-27,1.2.0.0/16,"(27,)"
-25,1.2.3.0/24,"(25,)"
-2152,1.2.3.0/24,"(2152, 25)"
-10886,1.2.0.0/16,"(10886, 27)"
-```
-
-
-### Comparing Results
-```bash
-# Compare your output with expected results
-./compare_output.sh bench/subprefix/ribs.csv ribs.csv
-./compare_output.sh bench/prefix/ribs.csv ribs.csv
-./compare_output.sh bench/many/ribs.csv ribs.csv
-```
-
-### Output from Compare on many
-```bash
-abdullah@Acer-Predator:~/cse_3150/project3$ ./compare_output.sh bench/many/ribs.csv ribs.csv
-Comparing files (sorted, ignoring whitespace):
-  Expected: bench/many/ribs.csv
-  Actual:   ribs.csv
-
-✓ Files match perfectly!
-```
 
 ### Performance:
 - Handles **78,370 ASNs** with **76 propagation ranks**
