@@ -6,44 +6,14 @@ A BGP (Border Gateway Protocol) routing simulator that models Internet AS (Auton
 
 ### Build Command:
 
-<<<<<<< HEAD
 # Step 1: Compile src file to .0 files
-=======
-### BGP Implementation
-- **Correct CAIDA Parsing**:
-  - `-1`: Provider-to-Customer relationship (AS1 → AS2)
-  - `0`: Peer-to-Peer relationship
-  - `1`: Sibling relationship (treated as peer)
-- **Realistic BGP Decision Process**: Routes selected based on:
-  1. **Relationship priority**: ORIGIN > CUSTOMER > PEER > PROVIDER
-  2. **AS-path length**: Shorter paths preferred
-  3. **Next-hop ASN**: Lower ASN as tiebreaker
-- **Three-Phase Propagation**:
-  - **UP**: Customer → Provider (by propagation ranks)
-  - **ACROSS**: Peer ↔ Peer (all ASes simultaneously)
-  - **DOWN**: Provider → Customer (reverse rank order)
-
-### Network Topology
-- **Cycle Detection**: Detects invalid provider-customer cycles using DFS
-- **Propagation Ranks**: Builds hierarchical ordering from leaf ASes upward
-- **Loop Prevention**: Prevents announcements from being sent back to their source
-
-### ROV (Route Origin Validation)
-- **Selective Filtering**: ROV-enabled ASes drop announcements marked as `rov_invalid=True`
-- **Security Enhancement**: Demonstrates prefix hijacking attack mitigation
-- **Backward Compatibility**: Non-ROV ASes accept all valid announcements
-
-## How to Run
-
-### Building
->>>>>>> 4820224 (Clean repo: remove unused test files and update README)
 ```bash
   g++ -std=c++17 -Wall -Wextra -O0 -g -Iinclude -c src/ASGraph.cpp -o src/ASGraph.o
-
+  
   g++ -std=c++17 -Wall -Wextra -O0 -g -Iinclude -c src/BGP.cpp -o src/BGP.o
-
+  
   g++ -std=c++17 -Wall -Wextra -O0 -g -Iinclude -c src/Announcement.cpp -o src/Announcement.o
-
+  
   g++ -std=c++17 -Wall -Wextra -O0 -g -Iinclude -c src/bgp_simulator.cpp -o src/bgp_simulator.o
 ```
 # Step 2: Link all o. files into  ./bgp_simulator
@@ -118,23 +88,23 @@ Comparing files (sorted, ignoring whitespace):
 - **Efficient Data Structures**: Hash maps and sets allow O(1) operations across large-scale networks.
 
 ### BGP Implementation
-- **Correct CAIDA Parsing**
+- **Correct CAIDA Parsing**  
   Relationship codes:
-  - `-1`: Provider-to-Customer (AS1 → AS2)
-  - `0`: Peer-to-Peer
+  - `-1`: Provider-to-Customer (AS1 → AS2)  
+  - `0`: Peer-to-Peer  
   - `1`: Sibling (treated the same as peer)
 
-- **Realistic BGP Decision Process**
+- **Realistic BGP Decision Process**  
   Routes are selected based on:
-  1. **Relationship priority**
-     ORIGIN > CUSTOMER > PEER > PROVIDER
-  2. **AS-path length** (shorter is preferred)
+  1. **Relationship priority**  
+     ORIGIN > CUSTOMER > PEER > PROVIDER  
+  2. **AS-path length** (shorter is preferred)  
   3. **Next-hop ASN** (lower ASN wins ties)
 
 - **Three-Phase Propagation**
-  - **UP**: Customer → Provider
-  - **ACROSS**: Peer ↔ Peer (synchronous)
-  - **DOWN**: Provider → Customer
+  - **UP**: Customer → Provider  
+  - **ACROSS**: Peer ↔ Peer (synchronous)  
+  - **DOWN**: Provider → Customer  
 
 ### Network Topology
 - **Cycle Detection**: Detects and aborts on invalid provider–customer loops.
@@ -158,8 +128,3 @@ The simulator exits with error code 1 and displays a message if:
 - Provider-customer cycles are detected in the AS relationships
 - Required input files cannot be opened
 - Command-line arguments are missing
-<<<<<<< HEAD
-=======
-
-**Note**: The provided test datasets are guaranteed to be cycle-free as per project requirements.
->>>>>>> 4820224 (Clean repo: remove unused test files and update README)
