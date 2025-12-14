@@ -7,8 +7,11 @@ A BGP (Border Gateway Protocol) routing simulator that models Internet AS (Auton
 ### Build Command:
 # Step 1: Compile src file to .0 files
   g++ -std=c++17 -Wall -Wextra -O0 -g -Iinclude -c src/ASGraph.cpp -o src/ASGraph.o
+  
   g++ -std=c++17 -Wall -Wextra -O0 -g -Iinclude -c src/BGP.cpp -o src/BGP.o
+  
   g++ -std=c++17 -Wall -Wextra -O0 -g -Iinclude -c src/Announcement.cpp -o src/Announcement.o
+  
   g++ -std=c++17 -Wall -Wextra -O0 -g -Iinclude -c src/bgp_simulator.cpp -o src/bgp_simulator.o
 
 # Step 2: Link all o. files into  ./bgp_simulator
